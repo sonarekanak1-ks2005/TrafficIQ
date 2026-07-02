@@ -1,0 +1,28 @@
+{
+  "input_dim": 13,
+  "hidden_dim": 32,
+  "lookback": 12,
+  "horizon": 8,
+  "weather_states": [
+    "clear",
+    "cloudy",
+    "rain",
+    "heavy_rain",
+    "fog"
+  ],
+  "feature_order": [
+    "congestion_norm",
+    "hour_sin",
+    "hour_cos",
+    "dow_sin",
+    "dow_cos",
+    "is_weekend",
+    "is_holiday",
+    "segment_base",
+    "weather_clear",
+    "weather_cloudy",
+    "weather_rain",
+    "weather_heavy_rain",
+    "weather_fog"
+  ]
+}

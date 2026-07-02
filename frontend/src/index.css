@@ -1,0 +1,389 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap');
+@import 'leaflet/dist/leaflet.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    --font-sans: 'Manrope', Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+    --radius: 0.875rem;
+
+    --tiq-bg: #0F1417;
+    --tiq-surface-1: #141A1E;
+    --tiq-surface-2: #192125;
+    --tiq-card: #151B1F;
+    --tiq-card-2: #1B2328;
+    --tiq-border: rgba(224, 229, 226, 0.10);
+    --tiq-border-strong: rgba(224, 229, 226, 0.18);
+    --tiq-muted: rgba(224, 229, 226, 0.64);
+    --tiq-foreground: #EEF2EF;
+
+    --tiq-primary: #4DB6AC;
+    --tiq-primary-foreground: #061312;
+    --tiq-success: #7BC96F;
+    --tiq-warning: #E9B44C;
+    --tiq-danger: #E76F51;
+
+    --tiq-glass-bg: rgba(21, 27, 31, 0.78);
+    --tiq-glass-border: rgba(224, 229, 226, 0.12);
+
+    --tiq-shadow-1: 0 12px 28px rgba(4, 8, 10, 0.38);
+    --tiq-shadow-2: 0 20px 48px rgba(4, 8, 10, 0.46);
+}
+
+@layer base {
+    :root {
+        --background: 0 0% 4%;
+        --foreground: 210 20% 96%;
+        --card: 0 0% 6.7%;
+        --card-foreground: 210 20% 96%;
+        --popover: 0 0% 6.7%;
+        --popover-foreground: 210 20% 96%;
+        --primary: 175 42% 51%;
+        --primary-foreground: 176 55% 5%;
+        --secondary: 0 0% 12%;
+        --secondary-foreground: 210 20% 96%;
+        --muted: 0 0% 10%;
+        --muted-foreground: 210 10% 62%;
+        --accent: 175 42% 51%;
+        --accent-foreground: 176 55% 5%;
+        --destructive: 0 84% 62%;
+        --destructive-foreground: 210 20% 96%;
+        --border: 0 0% 14%;
+        --input: 0 0% 14%;
+        --ring: 175 42% 51%;
+        --radius: 0.875rem;
+    }
+
+    .light {
+        --background: 42 35% 97%;
+        --foreground: 195 18% 10%;
+        --card: 0 0% 100%;
+        --card-foreground: 220 20% 5%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 220 20% 5%;
+        --primary: 174 52% 34%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 220 15% 94%;
+        --secondary-foreground: 220 20% 5%;
+        --muted: 220 14% 92%;
+        --muted-foreground: 220 10% 40%;
+        --accent: 174 52% 34%;
+        --accent-foreground: 0 0% 100%;
+        --destructive: 0 72% 51%;
+        --destructive-foreground: 0 0% 100%;
+        --border: 220 14% 88%;
+        --input: 220 14% 88%;
+        --ring: 174 52% 34%;
+
+        --tiq-bg: #F6F3EC;
+        --tiq-surface-1: #FFFDF8;
+        --tiq-surface-2: #ECE7DC;
+        --tiq-card: #FFFDF8;
+        --tiq-card-2: #F2EEE5;
+        --tiq-border: rgba(28, 41, 46, 0.12);
+        --tiq-border-strong: rgba(28, 41, 46, 0.20);
+        --tiq-muted: rgba(28, 41, 46, 0.62);
+        --tiq-foreground: #1C292E;
+        --tiq-primary: #2F8F83;
+        --tiq-primary-foreground: #FFFFFF;
+        --tiq-glass-bg: rgba(255, 253, 248, 0.80);
+        --tiq-glass-border: rgba(28, 41, 46, 0.12);
+        --tiq-shadow-1: 0 10px 24px rgba(28, 41, 46, 0.08);
+        --tiq-shadow-2: 0 18px 40px rgba(28, 41, 46, 0.12);
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+
+    html,
+    body,
+    #root {
+        height: 100%;
+    }
+
+    body {
+        margin: 0;
+        font-family: var(--font-sans);
+        background: var(--tiq-bg);
+        color: var(--tiq-foreground);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    .mono {
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+    }
+
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.16);
+    }
+
+    .light ::-webkit-scrollbar-thumb {
+        background: rgba(11, 13, 16, 0.14);
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--tiq-primary);
+        outline-offset: 2px;
+    }
+}
+
+@layer components {
+    .tiq-glass {
+        background: var(--tiq-glass-bg);
+        border: 1px solid var(--tiq-glass-border);
+        border-radius: var(--radius);
+        backdrop-filter: blur(14px) saturate(140%);
+        -webkit-backdrop-filter: blur(14px) saturate(140%);
+        box-shadow: var(--tiq-shadow-1);
+        position: relative;
+    }
+
+    .tiq-card {
+        background: var(--tiq-card);
+        border: 1px solid var(--tiq-border);
+        border-radius: var(--radius);
+        box-shadow: var(--tiq-shadow-1);
+    }
+
+    .tiq-card-2 {
+        background: var(--tiq-card-2);
+        border: 1px solid var(--tiq-border);
+        border-radius: var(--radius);
+    }
+
+    .tiq-hover:hover {
+        border-color: var(--tiq-border-strong);
+        box-shadow: var(--tiq-shadow-2);
+    }
+
+    .tiq-btn-primary {
+        background: var(--tiq-primary);
+        color: var(--tiq-primary-foreground);
+        border-radius: 12px;
+        padding: 0.55rem 1.05rem;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        transition: filter 180ms, transform 120ms;
+    }
+
+    .tiq-btn-primary:hover {
+        filter: brightness(1.1);
+    }
+
+    .tiq-btn-primary:active {
+        transform: scale(0.98);
+    }
+
+    .tiq-btn-secondary {
+        background: transparent;
+        border: 1px solid var(--tiq-border-strong);
+        color: var(--tiq-foreground);
+        border-radius: 12px;
+        padding: 0.55rem 1.05rem;
+        transition: background 180ms, border-color 180ms;
+    }
+
+    .tiq-btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: var(--tiq-primary);
+    }
+
+    .light .tiq-btn-secondary:hover {
+        background: rgba(11, 13, 16, 0.04);
+    }
+
+    .tiq-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        border: 1px solid var(--tiq-border-strong);
+    }
+
+    .tiq-divider {
+        height: 1px;
+        background: var(--tiq-border);
+    }
+}
+
+/* Hand-drawn map texture */
+.tiq-app-bg {
+    background: var(--tiq-bg);
+    background-image:
+        linear-gradient(115deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+        linear-gradient(22deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        radial-gradient(900px circle at 12% -6%, rgba(77, 182, 172, 0.13), transparent 55%),
+        radial-gradient(700px circle at 88% 8%, rgba(233, 180, 76, 0.08), transparent 60%);
+    background-size:
+        96px 96px,
+        140px 140px,
+        auto,
+        auto;
+    background-attachment: fixed;
+}
+
+.light .tiq-app-bg {
+    background-image:
+        linear-gradient(115deg, rgba(28, 41, 46, 0.045) 1px, transparent 1px),
+        linear-gradient(22deg, rgba(28, 41, 46, 0.035) 1px, transparent 1px),
+        radial-gradient(900px circle at 12% -6%, rgba(47, 143, 131, 0.12), transparent 55%),
+        radial-gradient(700px circle at 88% 8%, rgba(233, 180, 76, 0.11), transparent 60%);
+}
+
+/* Leaflet dark tile overrides */
+.leaflet-container {
+    background: #0A0A0A;
+    outline: none;
+}
+
+.light .leaflet-container {
+    background: #E6ECF3;
+}
+
+.tiq-tiles {
+    filter: invert(1) hue-rotate(200deg) brightness(0.85) contrast(0.92);
+}
+
+.light .tiq-tiles {
+    filter: none;
+}
+
+.leaflet-control-attribution {
+    background: rgba(0, 0, 0, 0.55) !important;
+    color: rgba(237, 239, 242, 0.6) !important;
+    font-size: 10px !important;
+    border-radius: 4px;
+}
+
+.leaflet-control-attribution a {
+    color: var(--tiq-primary) !important;
+}
+
+.leaflet-control-zoom a {
+    background: rgba(17, 17, 17, 0.8) !important;
+    color: var(--tiq-foreground) !important;
+    border: 1px solid var(--tiq-border) !important;
+}
+
+.leaflet-control-zoom a:hover {
+    background: rgba(0, 212, 255, 0.12) !important;
+    color: var(--tiq-primary) !important;
+}
+
+/* Segment pulse animation on update */
+.tiq-pulse path,
+path.tiq-pulse {
+    animation: tiqPulse 900ms ease-out 1;
+}
+
+@keyframes tiqPulse {
+    0% {
+        filter: drop-shadow(0 0 0 rgba(0, 212, 255, 0));
+        opacity: 0.85;
+    }
+
+    40% {
+        filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.45));
+        opacity: 1;
+    }
+
+    100% {
+        filter: drop-shadow(0 0 0 rgba(0, 212, 255, 0));
+        opacity: 0.9;
+    }
+}
+
+/* Heatmap cell */
+.tiq-heatmap-cell {
+    border-radius: 6px;
+    border: 1px solid var(--tiq-border);
+    transition: transform 160ms, border-color 160ms;
+}
+
+.tiq-heatmap-cell:hover {
+    transform: scale(1.06);
+    border-color: var(--tiq-primary);
+}
+
+/* Count-up shimmer */
+.tiq-shimmer {
+    background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.15), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 1.6s infinite;
+}
+
+@keyframes shimmer {
+    from {
+        background-position: 200% 0;
+    }
+
+    to {
+        background-position: -200% 0;
+    }
+}
+
+/* Ensure Sonner uses our palette */
+[data-sonner-toaster] {
+    --normal-bg: var(--tiq-card);
+    --normal-text: var(--tiq-foreground);
+    --normal-border: var(--tiq-border);
+}
+
+@layer base {
+    [data-debug-wrapper='true'] {
+        display: contents !important;
+    }
+
+    [data-debug-wrapper='true']>* {
+        margin-left: inherit;
+        margin-right: inherit;
+        margin-top: inherit;
+        margin-bottom: inherit;
+        padding-left: inherit;
+        padding-right: inherit;
+        padding-top: inherit;
+        padding-bottom: inherit;
+        column-gap: inherit;
+        row-gap: inherit;
+        gap: inherit;
+        border-left-width: inherit;
+        border-right-width: inherit;
+        border-top-width: inherit;
+        border-bottom-width: inherit;
+        border-left-style: inherit;
+        border-right-style: inherit;
+        border-top-style: inherit;
+        border-bottom-style: inherit;
+        border-left-color: inherit;
+        border-right-color: inherit;
+        border-top-color: inherit;
+        border-bottom-color: inherit;
+    }
+}
