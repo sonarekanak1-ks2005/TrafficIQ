@@ -35,6 +35,8 @@ export const AddressSearch = ({
     const [nominatimResults, setNominatimResults] = useState([]);
     const debounceRef = useRef(null);
     const containerRef = useRef(null);
+    const abortRef = useRef(null);
+    const latestQueryRef = useRef('');
 
     // Local road filter (instant)
     const roadMatches = value.trim().length === 0
@@ -50,19 +52,31 @@ export const AddressSearch = ({
             setNominatimResults([]);
             return;
         }
+        const q = value.trim();
         debounceRef.current = setTimeout(async () => {
+            // Cancel any still-pending previous request so a slow older
+            // response can never overwrite the results for what's typed now.
+            if (abortRef.current) abortRef.current.abort();
+            const controller = new AbortController();
+            abortRef.current = controller;
+            latestQueryRef.current = q;
+
             setLoading(true);
             try {
                 const r = await axios.get(`${API}/geo/search`, {
-                    params: { q: value.trim(), city, limit: 5 },
+                    params: { q, city, limit: 5 },
+                    signal: controller.signal,
                 });
-                setNominatimResults(r.data.results || []);
+                // Guard against out-of-order responses
+                if (latestQueryRef.current === q) {
+                    setNominatimResults(r.data.results || []);
+                }
             } catch (_e) {
-                setNominatimResults([]);
+                if (latestQueryRef.current === q) setNominatimResults([]);
             } finally {
-                setLoading(false);
+                if (latestQueryRef.current === q) setLoading(false);
             }
-        }, 450);
+        }, 300);
         return () => {
             if (debounceRef.current) clearTimeout(debounceRef.current);
         };
