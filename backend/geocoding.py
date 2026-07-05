@@ -3,11 +3,12 @@ Uses public endpoint with proper User-Agent and caching.
 """
 import json
 import logging
+import math
 import time
 from pathlib import Path
 from typing import Dict, List, Optional
 
-import requests
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +16,32 @@ NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 CACHE_DIR = Path("/tmp/tiq_geo_cache")
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 _CACHE_TTL = 30 * 24 * 3600  # 30 days
+
+# Shared async client (connection pooling = faster repeat requests)
+_client: Optional[httpx.AsyncClient] = None
+
+
+def _get_client() -> httpx.AsyncClient:
+    global _client
+    if _client is None:
+        _client = httpx.AsyncClient(
+            headers={
+                "User-Agent": "TrafficIQ/1.0 (contact: dev@trafficiq.app)",
+                "Accept": "application/json",
+                "Accept-Language": "en",
+            },
+            timeout=6.0,
+        )
+    return _client
+
+
+def _haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+    r = 6371.0
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    dphi = math.radians(lat2 - lat1)
+    dlmb = math.radians(lng2 - lng1)
+    a = math.sin(dphi / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dlmb / 2) ** 2
+    return 2 * r * math.asin(math.sqrt(a))
 
 
 def _cache_key(q: str) -> str:
@@ -42,12 +69,13 @@ def _save_cache(q: str, results: List[Dict]) -> None:
         pass
 
 
-def geocode_search(q: str, limit: int = 6, city_center: Optional[List[float]] = None, radius_km: float = 40.0) -> List[Dict]:
-    """Search for a place by name/address, optionally biasing to a city."""
+async def geocode_search(q: str, limit: int = 6, city_center: Optional[List[float]] = None, radius_km: float = 40.0) -> List[Dict]:
+    """Search for a place by name/address, strictly limited to a city when one is given."""
     if not q or not q.strip():
         return []
     q_norm = q.strip()
-    cached = _load_cache(f"{q_norm}|{city_center}|{radius_km}")
+    cache_key = f"{q_norm}|{city_center}|{radius_km}"
+    cached = _load_cache(cache_key)
     if cached is not None:
         return cached
 
@@ -59,22 +87,17 @@ def geocode_search(q: str, limit: int = 6, city_center: Optional[List[float]] = 
         "accept-language": "en",
     }
     if city_center and len(city_center) == 2:
-        # Bias search around city center via viewbox (roughly radius_km)
+        # Hard-bound the search to a box around the city center (roughly radius_km).
+        # bounded=1 tells Nominatim to treat this as a strict limit, not just a bias,
+        # so results from other cities/countries are excluded server-side.
         lat, lng = city_center
         deg = radius_km / 111.0
         params["viewbox"] = f"{lng - deg},{lat + deg},{lng + deg},{lat - deg}"
-        params["bounded"] = 0
+        params["bounded"] = 1
+
     try:
-        r = requests.get(
-            NOMINATIM_URL,
-            params=params,
-            headers={
-                "User-Agent": "TrafficIQ/1.0 (contact: dev@trafficiq.app)",
-                "Accept": "application/json",
-                "Accept-Language": "en",
-            },
-            timeout=12,
-        )
+        client = _get_client()
+        r = await client.get(NOMINATIM_URL, params=params)
         if r.status_code != 200:
             logger.warning("Nominatim %s -> %s", q_norm, r.status_code)
             return []
@@ -90,6 +113,13 @@ def geocode_search(q: str, limit: int = 6, city_center: Optional[List[float]] = 
             lng = float(item["lon"])
         except Exception:
             continue
+
+        # Belt-and-suspenders: even with bounded=1, double-check the result
+        # actually falls within radius_km of the city center before returning it.
+        if city_center and len(city_center) == 2:
+            if _haversine_km(city_center[0], city_center[1], lat, lng) > radius_km:
+                continue
+
         addr = item.get("address", {}) or {}
         city = (
             addr.get("city")
@@ -109,5 +139,6 @@ def geocode_search(q: str, limit: int = 6, city_center: Optional[List[float]] = 
             "country": addr.get("country", ""),
         })
 
-    _save_cache(f"{q_norm}|{city_center}|{radius_km}", out)
+    _save_cache(cache_key, out)
     return out
+
