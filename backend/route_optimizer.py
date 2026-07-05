@@ -200,7 +200,7 @@ def _summarize_route(edges, tag):
     }
 
 
-def optimize_routes(city_key: str, start: str, destination: str) -> Dict:
+async def optimize_routes(city_key: str, start: str, destination: str) -> Dict:
     graph, coords = _build_graph(city_key)
     start_node, start_coord, start_label = _resolve_endpoint(city_key, start, coords, prefer_first=True)
     end_node, end_coord, end_label = _resolve_endpoint(city_key, destination, coords, prefer_first=False)
@@ -213,7 +213,7 @@ def optimize_routes(city_key: str, start: str, destination: str) -> Dict:
     # 1) PREFER OSRM — real driving directions
     osrm_result = None
     try:
-        osrm_result = osrm_route(
+        osrm_result = await osrm_route(
             start=(start_coord[0], start_coord[1]),
             end=(end_coord[0], end_coord[1]),
             alternatives=3,
