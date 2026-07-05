@@ -11,7 +11,7 @@ import time
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-import requests
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +23,20 @@ OSRM_ENDPOINTS = [
 CACHE_DIR = Path("/tmp/tiq_osrm_cache")
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 _CACHE_TTL = 30 * 60  # 30 minutes — traffic changes but base geometry doesn't
+
+_client: Optional[httpx.AsyncClient] = None
+
+
+def _get_client() -> httpx.AsyncClient:
+    global _client
+    if _client is None:
+        _client = httpx.AsyncClient(
+            headers={
+                "User-Agent": "TrafficIQ/1.0 (https://trafficiq.example)",
+                "Accept": "application/json",
+            },
+        )
+    return _client
 
 
 def _cache_key(start: Tuple[float, float], end: Tuple[float, float]) -> str:
@@ -48,11 +62,11 @@ def _save_cache(key: str, data: Dict) -> None:
         pass
 
 
-def osrm_route(
+async def osrm_route(
     start: Tuple[float, float],
     end: Tuple[float, float],
     alternatives: int = 3,
-    timeout: int = 12,
+    timeout: int = 8,
 ) -> Optional[Dict]:
     """Fetch driving directions between two lat/lng points.
     Returns dict with `routes` list (each with coords/distance_km/duration_min/steps).
@@ -77,10 +91,8 @@ def osrm_route(
             "annotations": "false",
         }
         try:
-            r = requests.get(url, params=params, timeout=timeout, headers={
-                "User-Agent": "TrafficIQ/1.0 (https://trafficiq.example)",
-                "Accept": "application/json",
-            })
+            client = _get_client()
+            r = await client.get(url, params=params, timeout=timeout)
             if r.status_code != 200:
                 logger.warning("OSRM %s -> HTTP %s", base, r.status_code)
                 continue
