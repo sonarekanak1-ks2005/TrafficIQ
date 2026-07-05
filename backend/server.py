@@ -150,7 +150,7 @@ async def traffic_predict(req: PredictionRequest):
 async def routes_optimize(req: RouteRequest):
     if req.city not in CITIES:
         raise HTTPException(status_code=404, detail="Unknown city")
-    result = optimize_routes(req.city, req.start, req.destination)
+    result = await optimize_routes(req.city, req.start, req.destination)
     SESSION.bump_routes()
     result["session_routes_optimized"] = SESSION.routes_optimized
     return result
@@ -192,7 +192,7 @@ async def geo_search(q: str, city: Optional[str] = None, limit: int = 6):
     city_center = None
     if city and city in CITIES:
         city_center = CITIES[city]["center"]
-    results = geocode_search(q=q, limit=limit, city_center=city_center)
+    results = await geocode_search(q=q, limit=limit, city_center=city_center)
     return {"q": q, "city": city, "results": results}
 
 
